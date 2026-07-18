@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101820">
+  <title>BINGO Master Ultimate</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <canvas id="effectsCanvas" aria-hidden="true"></canvas>
+
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Offline Event Roulette</p>
+        <h1>BINGO Master Ultimate</h1>
+      </div>
+      <div class="top-actions" aria-label="グローバル操作">
+        <button class="icon-button" id="fullscreenBtn" title="全画面" aria-label="全画面">⛶</button>
+        <button class="icon-button" id="themeBtn" title="テーマ切替" aria-label="テーマ切替">◐</button>
+        <label class="volume-control" title="音量">
+          <span aria-hidden="true">♪</span>
+          <input id="volumeInput" type="range" min="0" max="100" step="1">
+        </label>
+      </div>
+    </header>
+
+    <main class="layout presenter-layout">
+      <section class="stage presentation-screen" aria-label="表示画面">
+        <div class="draw-display" id="drawDisplay">
+          <div class="letter" id="currentLetter">--</div>
+          <div class="winner-content">
+            <div class="number" id="currentNumber">--</div>
+            <div class="term" id="currentTerm">BINGO Master Ultimate</div>
+            <p class="winner-description" id="currentDescription"></p>
+          </div>
+        </div>
+      </section>
+
+      <aside class="admin-console" aria-label="管理者画面">
+        <section class="admin-block">
+          <div class="section-head">
+            <h2>抽選操作</h2>
+            <span id="remainingBadge">75 remaining</span>
+          </div>
+        <div class="controls" aria-label="抽選操作">
+          <button class="primary" id="startBtn">開始</button>
+          <button id="stopBtn" disabled>停止</button>
+          <button id="autoBtn">自動抽選</button>
+          <button id="fastBtn">高速</button>
+          <button id="bulkBtn">一括抽選</button>
+          <button id="openDisplayBtn">表示画面</button>
+        </div>
+        </section>
+
+        <section class="admin-block">
+          <div class="section-head">
+            <h2>設定</h2>
+          </div>
+        <div class="settings-grid">
+          <label>
+            最大番号
+            <input id="maxNumberInput" type="number" min="1" max="150" step="1">
+          </label>
+          <label>
+            自動間隔 秒
+            <input id="autoIntervalInput" type="number" min="1" max="20" step="1">
+          </label>
+          <label>
+            一括数
+            <input id="bulkCountInput" type="number" min="1" max="75" step="1">
+          </label>
+          <label>
+            ドラム音量
+            <input id="drumVolumeInput" type="range" min="0" max="200" step="1">
+          </label>
+          <label class="check-row">
+            <input id="allowRedrawInput" type="checkbox">
+            再抽選を許可
+          </label>
+          <label class="check-row">
+            <input id="bgmInput" type="checkbox">
+            BGM
+          </label>
+          <div class="bgm-upload">
+            <label class="file-button">
+              BGM追加
+              <input id="bgmFileInput" type="file" accept="audio/*" multiple>
+            </label>
+            <span id="bgmFileName">未設定</span>
+          </div>
+          <label class="wide-field">
+            BGM URL追加
+            <span class="url-add-row">
+              <input id="bgmUrlInput" type="url" placeholder="https://example.com/bgm.mp3">
+              <button id="bgmUrlAddBtn" type="button">追加</button>
+            </span>
+          </label>
+          <div class="bgm-playlist">
+            <select id="bgmTrackSelect" aria-label="BGM選択"></select>
+            <div class="bgm-track-actions">
+              <button id="bgmPlayBtn" type="button">再生</button>
+              <button id="bgmPrevBtn" type="button">前</button>
+              <button id="bgmNextBtn" type="button">次</button>
+              <button id="bgmRemoveBtn" type="button" class="danger">削除</button>
+            </div>
+          </div>
+        </div>
+        </section>
+
+        <section class="admin-block">
+          <div class="section-head">
+            <h2>抽選履歴</h2>
+            <button id="resetBtn" class="danger">リセット</button>
+          </div>
+          <ol class="history-list" id="historyList"></ol>
+        </section>
+
+        <section class="admin-block">
+          <div class="section-head">
+            <h2>景品・タイマー</h2>
+            <span id="timerText">00:00</span>
+          </div>
+          <div class="timer-controls">
+            <input id="timerMinutesInput" type="number" min="1" max="180" value="5" aria-label="タイマー分">
+            <button id="timerStartBtn">開始</button>
+            <button id="timerResetBtn">戻す</button>
+          </div>
+          <textarea id="prizesInput" rows="5" placeholder="景品一覧を入力"></textarea>
+        </section>
+
+        <section class="admin-panel admin-block" id="adminPanel" aria-label="管理機能">
+      <div class="section-head">
+        <h2>データ管理</h2>
+        <div class="admin-actions">
+          <button id="exportJsonBtn">JSON出力</button>
+          <button id="exportCsvBtn">CSV出力</button>
+          <label class="file-button">
+            読み込み
+            <input id="importInput" type="file" accept=".json,.csv,application/json,text/csv">
+          </label>
+        </div>
+      </div>
+
+      <div class="search-row">
+        <input id="searchInput" type="search" placeholder="番号・用語・カテゴリ・タグで検索">
+        <button id="addDataBtn">追加</button>
+      </div>
+
+      <div class="data-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>番号</th>
+              <th>名称</th>
+              <th>説明</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="dataTableBody"></tbody>
+        </table>
+      </div>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <dialog id="detailModal">
+    <form method="dialog" class="modal">
+      <button class="icon-button close" type="button" value="cancel" aria-label="閉じる">×</button>
+      <div class="modal-media" id="modalMedia"></div>
+      <div>
+        <p class="eyebrow" id="modalCategory">Category</p>
+        <h2 id="modalTitle">N-00</h2>
+        <p id="modalDescription"></p>
+        <dl class="detail-list">
+          <dt>URL</dt>
+          <dd><a id="modalUrl" target="_blank" rel="noopener"></a></dd>
+          <dt>メモ</dt>
+          <dd id="modalMemo"></dd>
+          <dt>タグ</dt>
+          <dd id="modalTags"></dd>
+        </dl>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="editModal">
+    <form method="dialog" class="modal edit-form" id="editForm">
+      <button class="icon-button close" type="button" value="cancel" aria-label="閉じる">×</button>
+      <h2 id="editTitle">番号データ編集</h2>
+      <input type="hidden" id="editOriginalNumber">
+      <label>番号<input id="editNumber" type="number" min="1" max="150" required></label>
+      <label>用語<input id="editTerm" maxlength="80"></label>
+      <label>説明<textarea id="editDescription" rows="4"></textarea></label>
+      <label>画像URL<input id="editImage" type="url"></label>
+      <label>アイコン<input id="editIcon" maxlength="12"></label>
+      <label>カテゴリ<input id="editCategory" maxlength="40"></label>
+      <label>URL<input id="editUrl" type="url"></label>
+      <label>メモ<textarea id="editMemo" rows="3"></textarea></label>
+      <label>色<input id="editColor" type="color"></label>
+      <label>タグ<input id="editTags" placeholder="カンマ区切り"></label>
+      <div class="form-actions">
+        <button type="button" class="danger" id="deleteDataBtn">削除</button>
+        <button class="primary" value="default">保存</button>
+      </div>
+    </form>
+  </dialog>
+  <script src="script.js"></script>
+</body>
+</html>

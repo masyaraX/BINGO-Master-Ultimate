@@ -1,0 +1,17 @@
+{
+  "name": "BINGO Master Ultimate",
+  "short_name": "BINGO Master",
+  "description": "Offline-capable bingo roulette system for events.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#101820",
+  "theme_color": "#101820",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
