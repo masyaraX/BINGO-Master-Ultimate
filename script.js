@@ -498,7 +498,7 @@ function drawNumber(options = {}) {
     playCymbal();
     launchEffects(options.fast ? 70 : 190);
     triggerWinnerAnimation();
-    resumeBgmAfterRoulette();
+    if (!state.autoTimer) resumeBgmAfterRoulette();
   }
   saveState();
   renderHistory();
@@ -1145,19 +1145,15 @@ function updateBgmVolume() {
 function pauseBgmForRoulette() {
   if (!state.settings.bgm || state.bgmPausedForRoulette) return;
   ensureAudio();
+  state.bgmPausedForRoulette = true;
   if (state.audio?.bgmElements?.size) {
     state.audio.bgmElements.forEach((audio) => audio.pause());
-    state.bgmPausedForRoulette = true;
-    return;
   }
   if (state.audio?.bgmElement) {
     state.audio.bgmElement.pause();
-    state.bgmPausedForRoulette = true;
-    return;
   }
   if (state.audio?.bgmOsc) {
     stopBgm();
-    state.bgmPausedForRoulette = true;
   }
 }
 
@@ -1177,6 +1173,7 @@ function resumeBgmAfterRoulette() {
 function retryBgmAfterGesture() {
   if (isDisplayOnly()) return;
   if (!state.settings.bgm) return;
+  if (state.spinning || state.bgmPausedForRoulette) return;
   if (state.audio?.bgmElement) {
     if (state.audio.bgmElement.paused) {
       state.audio.bgmElement.play().catch(() => {});
