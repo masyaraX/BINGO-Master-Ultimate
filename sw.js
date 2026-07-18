@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE_NAME = "bingo-master-ultimate-v2";
+const CACHE_NAME = "bingo-master-ultimate-v3";
 const ASSETS = [
   "./",
   "./index.html",
@@ -29,7 +29,8 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   const url = new URL(event.request.url);
-  const isAppShell = ["", "/", "/index.html", "/style.css", "/script.js", "/manifest.json"].includes(url.pathname);
+  const shellPath = url.pathname.split("/").pop() || "index.html";
+  const isAppShell = ["index.html", "style.css", "script.js", "manifest.json"].includes(shellPath);
   event.respondWith(
     fetch(event.request).then((response) => {
       const copy = response.clone();
