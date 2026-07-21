@@ -906,7 +906,7 @@ function exportJson() {
     version: "1.0",
     exportedAt: new Date().toISOString(),
     history: state.history,
-    numberData: Object.values(state.numberData),
+    numberData: buildExportNumberData(),
     settings: state.settings
   }, null, 2), "application/json");
 }
@@ -914,7 +914,7 @@ function exportJson() {
 function exportCsv() {
   const rows = [["number", "term", "description", "image", "icon", "category", "url", "memo", "color", "tags"]];
   range(1, state.settings.maxNumber).forEach((number) => {
-    const item = state.numberData[number] || defaultDataItem(number);
+    const item = buildExportDataItem(number);
     rows.push([
       item.number, item.term, item.description, item.image, item.icon, item.category,
       item.url, item.memo, item.color, item.tags.join("|")
@@ -922,6 +922,18 @@ function exportCsv() {
   });
   const csv = rows.map((row) => row.map(csvEscape).join(",")).join("\n");
   downloadFile("bingo-master-ultimate.csv", csv, "text/csv");
+}
+
+function buildExportNumberData() {
+  return range(1, state.settings.maxNumber).map((number) => buildExportDataItem(number));
+}
+
+function buildExportDataItem(number) {
+  const item = state.numberData[number] || defaultDataItem(number);
+  return {
+    ...item,
+    image: state.sessionImageData[number] || item.image
+  };
 }
 
 function importFile(event) {
@@ -1507,10 +1519,11 @@ function sanitizeAudioData(value) {
 }
 
 function sanitizeImageUrl(value) {
-  const text = sanitizeText(value, 600);
+  const raw = String(value ?? "").replace(/[\u0000-\u001f\u007f]/g, "").trim();
+  if (/^data:image\/(?:png|jpeg|jpg|gif|webp);base64,/i.test(raw)) return raw;
+  const text = sanitizeText(raw, 1200);
   if (!text) return "";
   if (/^blob:/i.test(text)) return text;
-  if (/^data:image\/(?:png|jpeg|jpg|gif|webp);base64,/i.test(text)) return text;
   return sanitizeUrl(text);
 }
 
@@ -1524,7 +1537,7 @@ function sanitizeTransientImageSource(value) {
 
 function registerServiceWorker() {
   if ("serviceWorker" in navigator && location.protocol !== "file:") {
-    navigator.serviceWorker.register("sw.js?v=7").then((registration) => {
+    navigator.serviceWorker.register("sw.js?v=8").then((registration) => {
       registration.update().catch(() => {});
     }).catch(() => {});
   }
