@@ -576,6 +576,7 @@ function startSpinPreview(available) {
   state.spinning = true;
   els.drawDisplay.classList.remove("idle-title");
   els.drawDisplay.classList.add("spinning");
+  renderWinnerImage(null);
   if (els.startBtn) els.startBtn.disabled = true;
   if (els.stopBtn) els.stopBtn.disabled = false;
   clearInterval(state.spinTimer);
@@ -1523,7 +1524,7 @@ function sanitizeTransientImageSource(value) {
 
 function registerServiceWorker() {
   if ("serviceWorker" in navigator && location.protocol !== "file:") {
-    navigator.serviceWorker.register("sw.js?v=5").then((registration) => {
+    navigator.serviceWorker.register("sw.js?v=6").then((registration) => {
       registration.update().catch(() => {});
     }).catch(() => {});
   }
