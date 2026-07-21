@@ -223,7 +223,7 @@ function serializeNumberData() {
   Object.entries(state.numberData).forEach(([number, item]) => {
     result[number] = {
       ...item,
-      image: isSessionImageUrl(item.image) ? "" : item.image
+      image: isSessionImageSource(number, item.image) ? "" : item.image
     };
   });
   return result;
@@ -231,6 +231,11 @@ function serializeNumberData() {
 
 function isSessionImageUrl(url) {
   return Boolean(url && state.sessionImageUrls.has(url));
+}
+
+function isSessionImageSource(number, value) {
+  if (!value) return false;
+  return isSessionImageUrl(value) || state.sessionImageData[number] === value || isImageDataUrl(value);
 }
 
 function normalizeSettings(input) {
@@ -948,7 +953,7 @@ function importFile(event) {
       } else {
         importCsv(text);
       }
-      saveState();
+      saveStateSafely("読み込みは完了しました。画像が大きいため、通常保存からは外しています。JSON/CSV出力には含められます。");
       renderAll();
       alert("読み込みが完了しました。");
     } catch (error) {
@@ -964,7 +969,8 @@ function importJson(text) {
   const parsed = JSON.parse(text);
   if (!parsed || typeof parsed !== "object") throw new Error("JSON形式が不正です。");
   const rows = Array.isArray(parsed.numberData) ? parsed.numberData : Object.values(parsed.numberData || {});
-  state.numberData = normalizeNumberData(rows);
+  state.numberData = normalizeNumberData(rows.map(normalizeImportedRecord));
+  registerImportedSessionImages();
   if (Array.isArray(parsed.history)) {
     state.history = parsed.history.map(Number).filter((n) => Number.isInteger(n) && n > 0 && n <= 150);
   }
@@ -983,9 +989,27 @@ function importCsv(text) {
       record[header] = row[index] || "";
     });
     record.tags = String(record.tags || "").split("|");
-    return record;
+    return normalizeImportedRecord(record);
   });
   state.numberData = normalizeNumberData(items);
+  registerImportedSessionImages();
+}
+
+function normalizeImportedRecord(record) {
+  const item = { ...record };
+  if (!item.image && isImageDataUrl(item.description)) {
+    item.image = item.description;
+    item.description = "";
+  }
+  return item;
+}
+
+function registerImportedSessionImages() {
+  Object.values(state.numberData).forEach((item) => {
+    if (isImageDataUrl(item.image)) {
+      state.sessionImageData[item.number] = item.image;
+    }
+  });
 }
 
 function parseCsv(text) {
@@ -1520,7 +1544,7 @@ function sanitizeAudioData(value) {
 
 function sanitizeImageUrl(value) {
   const raw = String(value ?? "").replace(/[\u0000-\u001f\u007f]/g, "").trim();
-  if (/^data:image\/(?:png|jpeg|jpg|gif|webp);base64,/i.test(raw)) return raw;
+  if (isImageDataUrl(raw)) return raw;
   const text = sanitizeText(raw, 1200);
   if (!text) return "";
   if (/^blob:/i.test(text)) return text;
@@ -1530,14 +1554,18 @@ function sanitizeImageUrl(value) {
 function sanitizeTransientImageSource(value) {
   const text = String(value ?? "").replace(/[\u0000-\u001f\u007f]/g, "").trim();
   if (!text) return "";
-  if (/^data:image\/(?:png|jpeg|jpg|gif|webp|svg\+xml);base64,/i.test(text)) return text;
+  if (isImageDataUrl(text)) return text;
   if (/^blob:/i.test(text)) return text;
   return sanitizeImageUrl(text);
 }
 
+function isImageDataUrl(value) {
+  return /^data:image\/(?:png|jpeg|jpg|gif|webp|svg\+xml);base64,/i.test(String(value || ""));
+}
+
 function registerServiceWorker() {
   if ("serviceWorker" in navigator && location.protocol !== "file:") {
-    navigator.serviceWorker.register("sw.js?v=8").then((registration) => {
+    navigator.serviceWorker.register("sw.js?v=9").then((registration) => {
       registration.update().catch(() => {});
     }).catch(() => {});
   }
