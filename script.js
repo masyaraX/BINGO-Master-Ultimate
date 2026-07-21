@@ -3,6 +3,7 @@
 const STORAGE_KEY = "bingo-master-ultimate-v1";
 const PRESENTATION_EVENT_KEY = "bingo-master-ultimate-presenter-event";
 const CHANNEL_NAME = "bingo-master-ultimate-presenter";
+const APP_VERSION = "14";
 const DRUM_ROLL_SRC = "sounds/drum-roll.mp3";
 const ROLL_FINISH_SRC = "sounds/roll-finish.mp3";
 const BGM_PERSIST_LIMIT_BYTES = 3.5 * 1024 * 1024;
@@ -844,6 +845,8 @@ function toggleFullscreen() {
 function openDisplayWindow() {
   const url = new URL(window.location.href);
   url.searchParams.set("display", "1");
+  url.searchParams.set("appv", APP_VERSION);
+  url.searchParams.set("refresh", String(Date.now()));
   window.open(url.href, "bingo-master-display", "popup=yes,width=1280,height=720");
 }
 
@@ -1573,7 +1576,7 @@ function isImageDataUrl(value) {
 
 function registerServiceWorker() {
   if ("serviceWorker" in navigator && location.protocol !== "file:") {
-    navigator.serviceWorker.register("sw.js?v=13").then((registration) => {
+    navigator.serviceWorker.register(`sw.js?v=${APP_VERSION}`).then((registration) => {
       registration.update().catch(() => {});
     }).catch(() => {});
   }

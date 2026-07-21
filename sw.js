@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE_NAME = "bingo-master-ultimate-v13";
+const CACHE_NAME = "bingo-master-ultimate-v14";
 const ASSETS = [
   "./",
   "./index.html",
