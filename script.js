@@ -1524,7 +1524,7 @@ function sanitizeTransientImageSource(value) {
 
 function registerServiceWorker() {
   if ("serviceWorker" in navigator && location.protocol !== "file:") {
-    navigator.serviceWorker.register("sw.js?v=6").then((registration) => {
+    navigator.serviceWorker.register("sw.js?v=7").then((registration) => {
       registration.update().catch(() => {});
     }).catch(() => {});
   }

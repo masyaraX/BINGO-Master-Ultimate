@@ -272,12 +272,17 @@ h2 {
 
 .winner-content {
   display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto auto;
+  grid-template-areas:
+    "number"
+    "term";
   justify-items: center;
   align-content: center;
-  gap: 18px;
+  gap: 28px;
   width: 100%;
   min-height: 100%;
-  padding: 86px 38px 44px;
+  padding: 82px 42px 56px;
   text-align: center;
 }
 
@@ -322,7 +327,8 @@ h2 {
 
 .number {
   grid-area: number;
-  font-size: 12.5rem;
+  justify-self: center;
+  font-size: clamp(8rem, 18vw, 15rem);
   line-height: 0.92;
   font-weight: 900;
   color: var(--text);
@@ -330,13 +336,18 @@ h2 {
 
 .term {
   grid-area: term;
-  max-width: 100%;
+  justify-self: center;
+  max-width: min(980px, 92%);
   color: var(--text);
-  font-size: 5.2rem;
+  font-size: clamp(3rem, 6.5vw, 6.8rem);
   line-height: 1.05;
   font-weight: 900;
   text-align: center;
   overflow-wrap: anywhere;
+}
+
+.draw-display:not(.has-image):not(.spinning):not(.idle-title) .term {
+  padding-inline: 0.08em;
 }
 
 .draw-display.has-image .number {
@@ -599,11 +610,12 @@ body.display-only .draw-display {
 }
 
 body.display-only .number {
-  font-size: 16rem;
+  font-size: clamp(10rem, 21vw, 18rem);
 }
 
 body.display-only .term {
-  font-size: 6.5rem;
+  font-size: clamp(3.8rem, 8vw, 8rem);
+  max-width: min(1180px, 90vw);
 }
 
 body.display-only .draw-display.has-image .winner-content {
@@ -925,15 +937,16 @@ dialog::backdrop {
   }
 
   .winner-content {
+    gap: 18px;
     padding: 72px 14px 24px;
   }
 
   .number {
-    font-size: 5.2rem;
+    font-size: clamp(5rem, 24vw, 8rem);
   }
 
   .term {
-    font-size: 2.15rem;
+    font-size: clamp(2rem, 10vw, 3.6rem);
   }
 
   .winner-description {
