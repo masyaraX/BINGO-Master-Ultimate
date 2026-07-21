@@ -282,7 +282,7 @@ h2 {
   gap: 28px;
   width: 100%;
   min-height: 100%;
-  padding: 82px 42px 56px;
+  padding: 58px 42px 56px;
   text-align: center;
 }
 
@@ -295,7 +295,7 @@ h2 {
   align-content: stretch;
   align-items: center;
   gap: 14px 24px;
-  padding: 42px 30px 22px;
+  padding: 26px 30px 22px;
 }
 
 .draw-display.spinning .winner-content {
@@ -311,18 +311,7 @@ h2 {
 }
 
 .letter {
-  position: absolute;
-  top: 28px;
-  left: 28px;
-  display: grid;
-  place-items: center;
-  width: 58px;
-  height: 58px;
-  border-radius: 50%;
-  background: var(--accent-2);
-  color: #04120f;
-  font-size: 1.8rem;
-  font-weight: 900;
+  display: none;
 }
 
 .number {
@@ -950,7 +939,7 @@ dialog::backdrop {
 
   .winner-content {
     gap: 18px;
-    padding: 72px 14px 24px;
+    padding: 42px 14px 24px;
   }
 
   .number {
@@ -974,7 +963,7 @@ dialog::backdrop {
       "term"
       "image";
     gap: 9px;
-    padding: 58px 10px 12px;
+    padding: 32px 10px 12px;
   }
 
   .draw-display.has-image .number,

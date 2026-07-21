@@ -1573,7 +1573,7 @@ function isImageDataUrl(value) {
 
 function registerServiceWorker() {
   if ("serviceWorker" in navigator && location.protocol !== "file:") {
-    navigator.serviceWorker.register("sw.js?v=11").then((registration) => {
+    navigator.serviceWorker.register("sw.js?v=12").then((registration) => {
       registration.update().catch(() => {});
     }).catch(() => {});
   }
