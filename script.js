@@ -398,6 +398,7 @@ function getPresentationData(number) {
 function renderWinnerImage(src) {
   els.currentDescription.replaceChildren();
   els.currentDescription.hidden = !src;
+  els.drawDisplay.classList.toggle("has-image", Boolean(src));
   if (!src) return;
   const img = document.createElement("img");
   img.src = src;
@@ -1522,7 +1523,7 @@ function sanitizeTransientImageSource(value) {
 
 function registerServiceWorker() {
   if ("serviceWorker" in navigator && location.protocol !== "file:") {
-    navigator.serviceWorker.register("sw.js?v=4").then((registration) => {
+    navigator.serviceWorker.register("sw.js?v=5").then((registration) => {
       registration.update().catch(() => {});
     }).catch(() => {});
   }
