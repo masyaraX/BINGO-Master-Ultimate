@@ -621,7 +621,7 @@ function drawNumber(options = {}) {
     playCymbal();
     launchEffects(options.fast ? 70 : 190);
     triggerWinnerAnimation();
-    if (!state.autoTimer) resumeBgmAfterRoulette();
+    resumeBgmAfterRoulette();
   }
   saveState();
   renderHistory();
@@ -1166,9 +1166,12 @@ function effectVolume(multiplier = 100) {
 function updateBgm() {
   ensureAudio();
   if (!state.audio) return;
+  if (isDisplayOnly() || !state.settings.bgm) {
+    stopBgm();
+    return;
+  }
+  if (state.spinning || state.bgmPausedForRoulette) return;
   stopBgm();
-  if (isDisplayOnly()) return;
-  if (!state.settings.bgm) return;
 
   const track = getCurrentBgmTrack();
   if (track) {
@@ -1335,15 +1338,20 @@ function pauseBgmForRoulette() {
 
 function resumeBgmAfterRoulette() {
   if (!state.bgmPausedForRoulette) return;
+  const pausedElement = state.audio?.bgmElement || null;
   state.bgmPausedForRoulette = false;
   setTimeout(() => {
-    if (!state.settings.bgm || isDisplayOnly()) return;
+    if (!state.settings.bgm || isDisplayOnly() || state.spinning || state.bgmPausedForRoulette) return;
+    if (pausedElement && pausedElement === state.audio?.bgmElement) {
+      pausedElement.play().catch(() => {});
+      return;
+    }
     if (state.audio?.bgmElement) {
       state.audio.bgmElement.play().catch(() => {});
       return;
     }
     updateBgm();
-  }, 1100);
+  }, 420);
 }
 
 function retryBgmAfterGesture() {
@@ -1565,7 +1573,7 @@ function isImageDataUrl(value) {
 
 function registerServiceWorker() {
   if ("serviceWorker" in navigator && location.protocol !== "file:") {
-    navigator.serviceWorker.register("sw.js?v=9").then((registration) => {
+    navigator.serviceWorker.register("sw.js?v=10").then((registration) => {
       registration.update().catch(() => {});
     }).catch(() => {});
   }

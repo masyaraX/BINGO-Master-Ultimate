@@ -287,15 +287,15 @@ h2 {
 }
 
 .draw-display.has-image .winner-content {
-  grid-template-columns: minmax(128px, 0.28fr) minmax(0, 1fr);
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-columns: minmax(118px, 0.22fr) minmax(0, 1fr);
+  grid-template-rows: auto minmax(320px, 1fr);
   grid-template-areas:
     "number term"
     "image image";
   align-content: stretch;
   align-items: center;
-  gap: 16px 24px;
-  padding: 64px 42px 34px;
+  gap: 18px 26px;
+  padding: 58px 38px 28px;
 }
 
 .draw-display.spinning .winner-content {
@@ -355,14 +355,14 @@ h2 {
   padding: 0 18px;
   border-radius: 16px;
   background: color-mix(in srgb, var(--surface) 72%, transparent);
-  font-size: clamp(4.4rem, 8vw, 8.5rem);
+  font-size: clamp(4rem, 7.4vw, 7.8rem);
   box-shadow: inset 0 0 0 1px var(--line);
 }
 
 .draw-display.has-image .term {
   justify-self: start;
   text-align: left;
-  font-size: clamp(2.4rem, 4.6vw, 5.4rem);
+  font-size: clamp(2.5rem, 4.8vw, 5.8rem);
 }
 
 .draw-display.spinning .number {
@@ -406,12 +406,14 @@ h2 {
   display: grid;
   place-items: center;
   min-height: 0;
-  width: 100%;
-  height: 100%;
-  padding: 10px;
+  width: min(100%, 1180px);
+  height: clamp(320px, 56vh, 690px);
+  justify-self: center;
+  padding: 12px;
   border: 1px solid color-mix(in srgb, var(--line) 72%, transparent);
   border-radius: 12px;
   background: color-mix(in srgb, var(--surface) 42%, transparent);
+  overflow: hidden;
 }
 
 .winner-image-slot[hidden] {
@@ -419,8 +421,11 @@ h2 {
 }
 
 .winner-image-slot img {
+  display: block;
   max-width: 100%;
-  max-height: min(62vh, 640px);
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
   border-radius: 10px;
   box-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
@@ -619,17 +624,18 @@ body.display-only .term {
 }
 
 body.display-only .draw-display.has-image .winner-content {
-  grid-template-columns: minmax(160px, 0.26fr) minmax(0, 1fr);
-  gap: 18px 30px;
-  padding: 58px 54px 36px;
+  grid-template-columns: minmax(160px, 0.22fr) minmax(0, 1fr);
+  grid-template-rows: auto minmax(460px, 1fr);
+  gap: 20px 34px;
+  padding: 50px 54px 30px;
 }
 
 body.display-only .draw-display.has-image .number {
-  font-size: clamp(5.8rem, 9vw, 10.5rem);
+  font-size: clamp(5.3rem, 8.2vw, 9.6rem);
 }
 
 body.display-only .draw-display.has-image .term {
-  font-size: clamp(3.4rem, 5.6vw, 6.6rem);
+  font-size: clamp(3.6rem, 6vw, 7rem);
 }
 
 body.display-only .winner-description {
@@ -637,7 +643,13 @@ body.display-only .winner-description {
 }
 
 body.display-only .winner-image-slot img {
-  max-height: 68vh;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+body.display-only .winner-image-slot {
+  width: min(100%, 1380px);
+  height: clamp(460px, 68vh, 820px);
 }
 
 body.display-only .draw-display.idle-title .term {
@@ -956,7 +968,7 @@ dialog::backdrop {
   .draw-display.has-image .winner-content,
   body.display-only .draw-display.has-image .winner-content {
     grid-template-columns: 1fr;
-    grid-template-rows: auto auto minmax(220px, 1fr);
+    grid-template-rows: auto auto minmax(260px, 1fr);
     grid-template-areas:
       "number"
       "term"
@@ -997,11 +1009,12 @@ dialog::backdrop {
 
   .winner-image-slot {
     padding: 8px;
+    width: 100%;
+    height: clamp(260px, 48vh, 520px);
   }
 
-  .winner-image-slot img,
-  body.display-only .winner-image-slot img {
-    max-height: 42vh;
+  body.display-only .winner-image-slot {
+    height: clamp(300px, 52vh, 560px);
   }
 
 }
