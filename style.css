@@ -411,11 +411,10 @@ h2 {
 
 .winner-image-slot img {
   display: block;
-  max-width: 100%;
-  max-height: 100%;
-  width: auto;
-  height: auto;
-  object-fit: contain;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
   border-radius: 10px;
   box-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
 }
@@ -632,8 +631,8 @@ body.display-only .winner-description {
 }
 
 body.display-only .winner-image-slot img {
-  max-width: 100%;
-  max-height: 100%;
+  width: 100%;
+  height: 100%;
 }
 
 body.display-only .winner-image-slot {
