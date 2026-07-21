@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#101820">
   <title>BINGO Master Ultimate</title>
-  <link rel="manifest" href="manifest.json?v=3">
+  <link rel="manifest" href="manifest.json?v=4">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="style.css?v=3">
+  <link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
   <canvas id="effectsCanvas" aria-hidden="true"></canvas>
@@ -35,7 +35,7 @@
           <div class="winner-content">
             <div class="number" id="currentNumber">--</div>
             <div class="term" id="currentTerm">BINGO Master Ultimate</div>
-            <p class="winner-description" id="currentDescription"></p>
+            <div class="winner-description winner-image-slot" id="currentDescription"></div>
           </div>
         </div>
       </section>
@@ -156,7 +156,7 @@
             <tr>
               <th>番号</th>
               <th>名称</th>
-              <th>説明</th>
+              <th>画像</th>
               <th>操作</th>
             </tr>
           </thead>
@@ -195,7 +195,7 @@
       <input type="hidden" id="editOriginalNumber">
       <label>番号<input id="editNumber" type="number" min="1" max="150" required></label>
       <label>用語<input id="editTerm" maxlength="80"></label>
-      <label>説明<textarea id="editDescription" rows="4"></textarea></label>
+      <label>画像挿入<input id="editImageFile" type="file" accept="image/*"></label>
       <label>画像URL<input id="editImage" type="url"></label>
       <label>アイコン<input id="editIcon" maxlength="12"></label>
       <label>カテゴリ<input id="editCategory" maxlength="40"></label>
@@ -209,6 +209,6 @@
       </div>
     </form>
   </dialog>
-  <script src="script.js?v=3"></script>
+  <script src="script.js?v=4"></script>
 </body>
 </html>

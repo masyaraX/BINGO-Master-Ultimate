@@ -44,6 +44,9 @@ const state = {
   },
   audio: null,
   sessionBgmUrls: new Set(),
+  sessionImageUrls: new Set(),
+  sessionImageData: {},
+  presentationNumberData: {},
   bgmPausedForRoulette: false,
   drumRollElement: null,
   lastPresentationNumber: null,
@@ -75,7 +78,7 @@ function cacheElements() {
     "exportJsonBtn", "exportCsvBtn", "importInput", "searchInput", "addDataBtn",
     "dataTableBody", "detailModal", "modalMedia", "modalCategory", "modalTitle",
     "modalDescription", "modalUrl", "modalMemo", "modalTags", "editModal", "editForm", "editTitle",
-    "editOriginalNumber", "editNumber", "editTerm", "editDescription", "editImage",
+    "editOriginalNumber", "editNumber", "editTerm", "editImageFile", "editImage",
     "editIcon", "editCategory", "editUrl", "editMemo", "editColor", "editTags",
     "deleteDataBtn"
   ].forEach((id) => {
@@ -99,6 +102,7 @@ function bindEvents() {
   els.searchInput.addEventListener("input", renderDataTable);
   els.addDataBtn.addEventListener("click", () => openEditModal());
   els.editForm.addEventListener("submit", saveEditedData);
+  els.editImageFile.addEventListener("change", importEditImage);
   els.deleteDataBtn.addEventListener("click", deleteEditedData);
   els.timerStartBtn.addEventListener("click", toggleTimer);
   els.timerResetBtn.addEventListener("click", resetTimer);
@@ -143,6 +147,7 @@ function bindEvents() {
 
   window.addEventListener("resize", resizeCanvas);
   window.addEventListener("beforeunload", revokeSessionBgmUrls);
+  window.addEventListener("beforeunload", revokeSessionImageUrls);
   document.body.addEventListener("click", retryBgmAfterGesture, { passive: true });
   window.addEventListener("storage", (event) => {
     if (event.key === PRESENTATION_EVENT_KEY && event.newValue) {
@@ -184,7 +189,7 @@ function loadState() {
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({
     history: state.history,
-    numberData: state.numberData,
+    numberData: serializeNumberData(),
     settings: serializeSettings()
   }));
 }
@@ -211,6 +216,21 @@ function serializeSettings() {
 
 function isPersistentBgmTrack(track) {
   return Boolean(track && !track.temporary && (track.data || (track.url && !track.url.startsWith("blob:"))));
+}
+
+function serializeNumberData() {
+  const result = {};
+  Object.entries(state.numberData).forEach(([number, item]) => {
+    result[number] = {
+      ...item,
+      image: isSessionImageUrl(item.image) ? "" : item.image
+    };
+  });
+  return result;
+}
+
+function isSessionImageUrl(url) {
+  return Boolean(url && state.sessionImageUrls.has(url));
 }
 
 function normalizeSettings(input) {
@@ -360,15 +380,30 @@ function renderCurrent() {
     els.currentLetter.textContent = "--";
     els.currentNumber.textContent = "";
     els.currentTerm.textContent = "BINGO Master Ultimate";
-    els.currentDescription.textContent = "";
+    renderWinnerImage(null);
     return;
   }
   els.drawDisplay.classList.remove("idle-title");
-  const data = state.numberData[current];
+  const data = getPresentationData(current);
   els.currentLetter.textContent = getLetter(current);
   els.currentNumber.textContent = String(current);
   els.currentTerm.textContent = data?.term || data?.category || "名称未登録";
-  els.currentDescription.textContent = data?.description || data?.memo || "説明未登録です。データ管理から説明を追加できます。";
+  renderWinnerImage(data?.image || "");
+}
+
+function getPresentationData(number) {
+  return state.presentationNumberData[number] || state.numberData[number] || defaultDataItem(number);
+}
+
+function renderWinnerImage(src) {
+  els.currentDescription.replaceChildren();
+  els.currentDescription.hidden = !src;
+  if (!src) return;
+  const img = document.createElement("img");
+  img.src = src;
+  img.alt = "当選画像";
+  img.referrerPolicy = "no-referrer";
+  els.currentDescription.append(img);
 }
 
 function renderDataTable() {
@@ -386,7 +421,7 @@ function renderDataTable() {
     tr.append(
       tableCell(`${getLetter(item.number)}-${item.number}`),
       quickEditCell("term", item.term, "名称"),
-      quickEditCell("description", item.description, "説明")
+      imageInsertCell(item)
     );
     const actionCell = document.createElement("td");
     actionCell.className = "row-actions";
@@ -423,16 +458,37 @@ function quickEditCell(field, value, label) {
   return td;
 }
 
+function imageInsertCell(item) {
+  const td = document.createElement("td");
+  td.className = "image-insert-cell";
+  const preview = document.createElement("div");
+  preview.className = "image-preview";
+  if (item.image) {
+    const img = document.createElement("img");
+    img.src = item.image;
+    img.alt = `${item.number} image`;
+    preview.append(img);
+  } else {
+    preview.textContent = "未設定";
+  }
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "image/*";
+  input.dataset.field = "image";
+  input.setAttribute("aria-label", "画像挿入");
+  input.addEventListener("change", () => importRowImage(item.number, input.files?.[0]));
+  td.append(preview, input);
+  return td;
+}
+
 function saveQuickEditRow(row) {
   const number = Number(row.dataset.number);
   const current = state.numberData[number] || defaultDataItem(number);
   const term = row.querySelector('[data-field="term"]').value;
-  const description = row.querySelector('[data-field="description"]').value;
   const item = cleanDataItem({
     ...current,
     number,
-    term,
-    description
+    term
   });
   if (!item) return alert("番号データの形式を確認してください。");
   state.numberData[number] = item;
@@ -440,6 +496,66 @@ function saveQuickEditRow(row) {
   renderHistory();
   renderCurrent();
   renderDataTable();
+}
+
+function importRowImage(number, file) {
+  if (!file) return;
+  if (!file.type.startsWith("image/")) {
+    alert("画像ファイルを選択してください。");
+    return;
+  }
+  const current = state.numberData[number] || defaultDataItem(number);
+  revokeSessionImageUrl(current.image);
+  const url = URL.createObjectURL(file);
+  state.sessionImageUrls.add(url);
+  readSessionImageData(number, file);
+  const item = cleanDataItem({
+    ...current,
+    number,
+    image: url
+  });
+  if (!item) return;
+  state.numberData[number] = item;
+  renderCurrent();
+  renderDataTable();
+}
+
+function importEditImage(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  if (!file.type.startsWith("image/")) {
+    alert("画像ファイルを選択してください。");
+    event.target.value = "";
+    return;
+  }
+  revokeSessionImageUrl(els.editImage.value);
+  const url = URL.createObjectURL(file);
+  state.sessionImageUrls.add(url);
+  els.editImage.value = url;
+  readSessionImageData(Number(els.editNumber.value), file);
+}
+
+function readSessionImageData(number, file) {
+  if (!number || !file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const data = String(reader.result || "");
+    if (/^data:image\//i.test(data)) {
+      state.sessionImageData[number] = data;
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function revokeSessionImageUrl(url) {
+  if (!url || !state.sessionImageUrls.has(url)) return;
+  URL.revokeObjectURL(url);
+  state.sessionImageUrls.delete(url);
+}
+
+function revokeSessionImageUrls() {
+  state.sessionImageUrls.forEach((url) => URL.revokeObjectURL(url));
+  state.sessionImageUrls.clear();
 }
 
 function startSpin() {
@@ -467,7 +583,7 @@ function startSpinPreview(available) {
     els.currentLetter.textContent = getLetter(preview);
     els.currentNumber.textContent = String(preview);
     els.currentTerm.textContent = "回転中...";
-    els.currentDescription.textContent = "停止すると当選番号の名称と説明を表示します。";
+    renderWinnerImage(null);
   }, 70);
 }
 
@@ -507,9 +623,18 @@ function drawNumber(options = {}) {
     broadcastPresentation({
       type: "draw-result",
       number,
-      effectCount: options.fast ? 70 : 190
+      effectCount: options.fast ? 70 : 190,
+      item: buildPresentationItem(number)
     });
   }
+}
+
+function buildPresentationItem(number) {
+  const item = state.numberData[number] || defaultDataItem(number);
+  return {
+    ...item,
+    image: state.sessionImageData[number] || item.image
+  };
 }
 
 function getAvailableNumbers() {
@@ -575,7 +700,7 @@ function openDetailModal(number) {
   const data = state.numberData[number] || defaultDataItem(number);
   els.modalCategory.textContent = data.category || "No category";
   els.modalTitle.textContent = `${getLetter(number)}-${number} ${data.icon || ""}`;
-  els.modalDescription.textContent = data.description || "説明は未登録です。";
+  els.modalDescription.textContent = data.image ? "画像登録済み" : "画像は未登録です。";
   els.modalUrl.textContent = data.url || "-";
   els.modalUrl.href = data.url || "#";
   els.modalMemo.textContent = data.memo || "-";
@@ -599,7 +724,7 @@ function openEditModal(number = null) {
   els.editOriginalNumber.value = number || "";
   els.editNumber.value = data.number;
   els.editTerm.value = data.term;
-  els.editDescription.value = data.description;
+  els.editImageFile.value = "";
   els.editImage.value = data.image;
   els.editIcon.value = data.icon;
   els.editCategory.value = data.category;
@@ -616,7 +741,7 @@ function saveEditedData(event) {
   const item = cleanDataItem({
     number: Number(els.editNumber.value),
     term: els.editTerm.value,
-    description: els.editDescription.value,
+    description: "",
     image: els.editImage.value,
     icon: els.editIcon.value,
     category: els.editCategory.value,
@@ -627,7 +752,13 @@ function saveEditedData(event) {
   });
   if (!item) return alert("番号データの形式を確認してください。");
   const original = Number(els.editOriginalNumber.value);
-  if (original && original !== item.number) delete state.numberData[original];
+  if (original && original !== item.number) {
+    delete state.numberData[original];
+    if (state.sessionImageData[original]) {
+      state.sessionImageData[item.number] = state.sessionImageData[original];
+      delete state.sessionImageData[original];
+    }
+  }
   state.numberData[item.number] = item;
   state.settings.maxNumber = Math.max(state.settings.maxNumber, item.number);
   saveState();
@@ -638,6 +769,8 @@ function saveEditedData(event) {
 function deleteEditedData() {
   const number = Number(els.editOriginalNumber.value);
   if (!number || !confirm("この番号データを削除しますか？")) return;
+  revokeSessionImageUrl(state.numberData[number]?.image);
+  delete state.sessionImageData[number];
   delete state.numberData[number];
   saveState();
   els.editModal.close();
@@ -736,6 +869,11 @@ function handlePresentationMessage(message) {
   }
   if (message.type === "draw-result") {
     loadState();
+    if (message.item?.number) {
+      const item = cleanDataItem({ ...message.item, image: "" }) || defaultDataItem(message.item.number);
+      item.image = sanitizeTransientImageSource(message.item.image);
+      state.presentationNumberData[item.number] = item;
+    }
     renderAll();
     playPresentationResult(message.effectCount || 100);
   }
@@ -1369,13 +1507,22 @@ function sanitizeAudioData(value) {
 function sanitizeImageUrl(value) {
   const text = sanitizeText(value, 600);
   if (!text) return "";
+  if (/^blob:/i.test(text)) return text;
   if (/^data:image\/(?:png|jpeg|jpg|gif|webp);base64,/i.test(text)) return text;
   return sanitizeUrl(text);
 }
 
+function sanitizeTransientImageSource(value) {
+  const text = String(value ?? "").replace(/[\u0000-\u001f\u007f]/g, "").trim();
+  if (!text) return "";
+  if (/^data:image\/(?:png|jpeg|jpg|gif|webp|svg\+xml);base64,/i.test(text)) return text;
+  if (/^blob:/i.test(text)) return text;
+  return sanitizeImageUrl(text);
+}
+
 function registerServiceWorker() {
   if ("serviceWorker" in navigator && location.protocol !== "file:") {
-    navigator.serviceWorker.register("sw.js?v=3").then((registration) => {
+    navigator.serviceWorker.register("sw.js?v=4").then((registration) => {
       registration.update().catch(() => {});
     }).catch(() => {});
   }

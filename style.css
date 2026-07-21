@@ -331,6 +331,24 @@ h2 {
   overflow-wrap: anywhere;
 }
 
+.winner-image-slot {
+  display: grid;
+  place-items: center;
+  min-height: 0;
+}
+
+.winner-image-slot[hidden] {
+  display: none;
+}
+
+.winner-image-slot img {
+  max-width: min(920px, 82vw);
+  max-height: min(42vh, 420px);
+  object-fit: contain;
+  border-radius: 10px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+}
+
 .controls {
   margin-top: 14px;
 }
@@ -526,6 +544,11 @@ body.display-only .winner-description {
   font-size: 2.6rem;
 }
 
+body.display-only .winner-image-slot img {
+  max-width: min(1100px, 88vw);
+  max-height: 48vh;
+}
+
 body.display-only .draw-display.idle-title .term {
   font-size: clamp(4rem, 11vw, 9rem);
 }
@@ -615,6 +638,33 @@ td textarea {
 td textarea {
   min-height: 72px;
   margin-top: 8px;
+}
+
+.image-insert-cell {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.image-preview {
+  display: grid;
+  place-items: center;
+  min-height: 96px;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--surface-2) 62%, transparent);
+  overflow: hidden;
+}
+
+.image-preview img {
+  width: 100%;
+  max-height: 180px;
+  object-fit: contain;
+}
+
+.image-insert-cell input[type="file"] {
+  min-height: 40px;
 }
 
 td.row-actions {
